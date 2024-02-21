@@ -8,7 +8,7 @@ import io
 app = FastAPI()
 
 # Load the trained model
-model = load_model('ocr_model.h5')
+model = load_model('ocr_model_new.h5')
 
 # Load the label encoder
 with open('label_encoder.pkl', 'rb') as f:
