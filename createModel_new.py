@@ -6,10 +6,12 @@ from tensorflow.keras import datasets, layers, models
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
-import pickle
+from sklearn.metrics import confusion_matrix, classification_report
+import seaborn as sns
 from tensorflow.keras import regularizers
 from tensorflow.keras.layers import BatchNormalization, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.metrics import classification_report
 
 # Load your dataset
 data = pd.read_csv('data.csv')
@@ -53,6 +55,8 @@ model.add(BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
 model.add(BatchNormalization())
+model.add(layers.Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+model.add(BatchNormalization())
 
 # Add Dense layers on top
 model.add(layers.Flatten())
@@ -61,6 +65,7 @@ model.add(Dropout(0.5))
 model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Dropout(0.5))
 model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.001))) 
+model.add(Dropout(0.5))
 model.add(layers.Dense(len(np.unique(labels)), activation='softmax'))  
 
 # Compile and train the model
@@ -77,10 +82,11 @@ history = model.fit(datagen.flow(train_pixels, train_labels, batch_size=32),
                     validation_data=(test_pixels, test_labels),
                     callbacks=[early_stopping, learning_rate_reduction])
 
-# Assuming 'encoder' is the LabelEncoder you used to encode your labels
-with open('label_encoder.pkl', 'wb') as f:
-    pickle.dump(encoder, f)
+# Save the entire model to a HDF5 file
+model.save('ocr_model_new.h5')
 
+
+# Plot training & validation accuracy values
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 plt.plot(history.history['accuracy'])
@@ -89,6 +95,7 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='upper left')
+plt.savefig('accuracy.png')
 
 # Plot training & validation loss values
 plt.subplot(1, 2, 2)
@@ -98,9 +105,4 @@ plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='upper left')
-
-plt.tight_layout()
-plt.savefig('accuracy_loss_plot.png')
-plt.show()
-
-model.save('ocr_model_new.h5')
+plt.savefig('loss.png')
