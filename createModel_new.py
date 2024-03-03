@@ -11,7 +11,6 @@ import seaborn as sns
 from tensorflow.keras import regularizers
 from tensorflow.keras.layers import BatchNormalization, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.metrics import classification_report
 
 # Load your dataset
 data = pd.read_csv('data.csv')
@@ -85,7 +84,6 @@ history = model.fit(datagen.flow(train_pixels, train_labels, batch_size=32),
 # Save the entire model to a HDF5 file
 model.save('ocr_model_new.h5')
 
-
 # Plot training & validation accuracy values
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
@@ -94,8 +92,7 @@ plt.plot(history.history['val_accuracy'])
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.legend(['Train', 'Validation'], loc='upper left')
-plt.savefig('accuracy.png')
+plt.legend(['Train', 'Test'], loc='upper left')
 
 # Plot training & validation loss values
 plt.subplot(1, 2, 2)
@@ -104,5 +101,35 @@ plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['Train', 'Validation'], loc='upper left')
-plt.savefig('loss.png')
+plt.legend(['Train', 'Test'], loc='upper left')
+plt.show()
+
+# Predict the values from the validation dataset
+y_pred = model.predict(test_pixels)
+# Convert predictions classes to one hot vectors 
+y_pred_classes = np.argmax(y_pred, axis = 1) 
+
+# Convert the labels back to original names 
+test_labels_names = encoder.inverse_transform(test_labels)
+y_pred_classes_names = encoder.inverse_transform(y_pred_classes)
+
+# compute the confusion matrix
+confusion_mtx = confusion_matrix(test_labels_names, y_pred_classes_names) 
+
+# plot the confusion matrix
+f,ax = plt.subplots(figsize=(8, 8))
+sns.heatmap(confusion_mtx, annot=True, linewidths=0.01,cmap="Greens",linecolor="gray", fmt= '.1f',ax=ax)
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.title("Confusion Matrix")
+plt.savefig('confusion_matrix.png')  # Save the confusion matrix to a file
+plt.show()
+
+# Classification report
+print('Classification Report')
+classification_rep = classification_report(test_labels_names, y_pred_classes_names)
+print(classification_rep)
+
+# Save the classification report to a file
+with open('classification_report.txt', 'w') as f:
+    f.write(classification_rep)

@@ -1,0 +1,52 @@
+                           precision    recall  f1-score   support
+
+          character_01_ka       0.99      1.00      0.99       435
+         character_02_kha       0.99      1.00      1.00       384
+          character_03_ga       0.99      0.99      0.99       401
+         character_04_gha       0.98      0.98      0.98       401
+         character_05_kna       0.99      0.99      0.99       451
+         character_06_cha       1.00      0.99      0.99       420
+        character_07_chha       0.99      0.97      0.98       379
+          character_08_ja       1.00      0.99      0.99       406
+         character_09_jha       0.99      1.00      0.99       409
+         character_10_yna       1.00      0.99      0.99       412
+    character_11_taamatar       0.99      0.98      0.99       416
+        character_12_thaa       1.00      0.98      0.99       396
+         character_13_daa       0.97      0.97      0.97       403
+        character_14_dhaa       0.96      0.97      0.96       381
+        character_15_adna       1.00      0.99      0.99       386
+      character_16_tabala       0.98      1.00      0.99       382
+         character_17_tha       0.98      0.98      0.98       430
+          character_18_da       0.95      0.96      0.95       390
+         character_19_dha       0.97      0.99      0.98       401
+          character_20_na       1.00      0.98      0.99       404
+          character_21_pa       0.99      0.99      0.99       422
+         character_22_pha       1.00      1.00      1.00       419
+          character_23_ba       0.97      0.98      0.98       421
+         character_24_bha       0.98      0.97      0.98       356
+          character_25_ma       0.99      1.00      0.99       410
+         character_26_yaw       0.97      0.98      0.97       397
+          character_27_ra       0.99      0.99      0.99       385
+          character_28_la       1.00      1.00      1.00       366
+         character_29_waw       0.98      0.96      0.97       400
+     character_30_motosaw       0.99      0.99      0.99       397
+character_31_petchiryakha       1.00      0.99      0.99       424
+   character_32_patalosaw       1.00      0.99      1.00       354
+          character_33_ha       0.98      0.98      0.98       392
+       character_34_chhya       0.99      0.99      0.99       398
+         character_35_tra       0.99      1.00      0.99       415
+         character_36_gya       0.98      1.00      0.99       392
+                  digit_0       1.00      0.99      1.00       396
+                  digit_1       1.00      0.99      1.00       392
+                  digit_2       0.99      0.99      0.99       403
+                  digit_3       0.98      0.98      0.98       403
+                  digit_4       1.00      1.00      1.00       376
+                  digit_5       0.99      1.00      1.00       370
+                  digit_6       0.97      0.98      0.97       394
+                  digit_7       1.00      1.00      1.00       398
+                  digit_8       0.99      1.00      0.99       411
+                  digit_9       1.00      1.00      1.00       422
+
+                 accuracy                           0.99     18400
+                macro avg       0.99      0.99      0.99     18400
+             weighted avg       0.99      0.99      0.99     18400
