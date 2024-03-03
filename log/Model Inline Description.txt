@@ -1,0 +1,73 @@
+import pandas as pd  # Importing pandas for data manipulation
+import numpy as np  # Importing numpy for numerical operations
+from sklearn.model_selection import train_test_split  # Importing train_test_split for splitting the data into training and testing sets
+from tensorflow.keras import datasets, layers, models  # Importing necessary modules from tensorflow for creating the model
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau  # Importing callbacks for model training
+from sklearn.preprocessing import LabelEncoder  # Importing LabelEncoder for encoding labels
+import matplotlib.pyplot as plt  # Importing matplotlib for plotting
+from sklearn.metrics import confusion_matrix, classification_report  # Importing metrics for model evaluation
+import seaborn as sns  # Importing seaborn for data visualization
+from tensorflow.keras import regularizers  # Importing regularizers for regularization
+from tensorflow.keras.layers import BatchNormalization, Dropout  # Importing BatchNormalization and Dropout for model layers
+from tensorflow.keras.preprocessing.image import ImageDataGenerator  # Importing ImageDataGenerator for data augmentation
+from sklearn.metrics import classification_report  # Importing classification_report for model evaluation
+
+data = pd.read_csv('data.csv')  # Loading the dataset
+
+labels = data['character']  # Extracting the labels from the dataset
+pixels = data.drop('character', axis=1)  # Extracting the pixel values from the dataset
+
+encoder = LabelEncoder()  # Initializing the LabelEncoder
+labels = encoder.fit_transform(labels)  # Encoding the labels
+
+pixels = pixels / 255.0  # Normalizing the pixel values
+
+train_pixels, test_pixels, train_labels, test_labels = train_test_split(pixels, labels, test_size=0.2)  # Splitting the data into training and testing sets
+
+train_pixels = np.array(train_pixels).reshape(-1, 32, 32, 1)  # Reshaping the training pixel values to fit the model
+test_pixels = np.array(test_pixels).reshape(-1, 32, 32, 1)  # Reshaping the testing pixel values to fit the model
+
+datagen = ImageDataGenerator(  # Initializing the ImageDataGenerator for data augmentation
+    rotation_range=10,  
+    zoom_range = 0.1, 
+    width_shift_range=0.1,  
+    height_shift_range=0.1,  
+    horizontal_flip=True,  
+    vertical_flip=False)
+
+datagen.fit(train_pixels)  # Fitting the ImageDataGenerator on the training data
+
+model = models.Sequential()  # Initializing the Sequential model
+model.add(layers.Conv2D(32, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001), input_shape=(32, 32, 1)))  # Adding a Conv2D layer
+model.add(BatchNormalization())  # Adding a BatchNormalization layer
+model.add(layers.MaxPooling2D((2, 2)))  # Adding a MaxPooling2D layer
+model.add(layers.Conv2D(64, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding another Conv2D layer
+model.add(BatchNormalization())  # Adding another BatchNormalization layer
+model.add(layers.MaxPooling2D((2, 2)))  # Adding another MaxPooling2D layer
+model.add(layers.Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding another Conv2D layer
+model.add(BatchNormalization())  # Adding another BatchNormalization layer
+model.add(layers.Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding another Conv2D layer
+model.add(BatchNormalization())  # Adding another BatchNormalization layer
+
+model.add(layers.Flatten())  # Adding a Flatten layer
+model.add(layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding a Dense layer
+model.add(Dropout(0.5))  # Adding a Dropout layer
+model.add(layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding another Dense layer
+model.add(Dropout(0.5))  # Adding another Dropout layer
+model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.001)))  # Adding another Dense layer
+model.add(Dropout(0.5))  # Adding another Dropout layer
+model.add(layers.Dense(len(np.unique(labels)), activation='softmax'))  # Adding the output layer
+
+model.compile(optimizer='adam',  # Compiling the model
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+early_stopping = EarlyStopping(monitor='val_loss', patience=3)  # Initializing EarlyStopping
+learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience=2, verbose=1, factor=0.5, min_lr=0.00001)  # Initializing ReduceLROnPlateau
+
+history = model.fit(datagen.flow(train_pixels, train_labels, batch_size=32),  # Training the model
+                    epochs=50, 
+                    validation_data=(test_pixels, test_labels),
+                    callbacks=[early_stopping, learning_rate_reduction])
+
+model.save('ocr_model_new.h5')  # Saving the model

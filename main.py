@@ -6,6 +6,9 @@ import numpy as np
 import pickle
 import io
 
+from wordSegmentation import segment_word_into_characters
+
+
 app = FastAPI()
 
 # Add CORS middleware
@@ -73,39 +76,53 @@ label_to_char = {
     'digit_9': '९',
 }
 
-
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
     # Read the image file
     contents = await file.read()
     img = Image.open(io.BytesIO(contents)).convert('L')
 
-    # Resize the image to 32x32 pixels
-    img = img.resize((32, 32))
+    # Save the image to a temporary file
+    temp_file_path = 'temp.png'
+    img.save(temp_file_path)
 
-    # Invert the image
-    img = ImageOps.invert(img)
+    # Segment the word into individual characters
+    characters = segment_word_into_characters(temp_file_path)
 
-    # Convert the image data to a numpy array and normalize it
-    img_data = np.array(img) / 255.0
+    # Process each character
+    predictions = []
+    for char_img in characters:
+        # Resize the image to 32x32 pixels
+        char_img = char_img.resize((32, 32))
 
-    # Reshape the data to the shape your model expects
-    # For a single grayscale image, the shape is (1, 32, 32, 1)
-    img_data = img_data.reshape(1, 32, 32, 1)
+        # Invert the image
+        char_img = ImageOps.invert(char_img)
 
-    # Use the model to make a prediction
-    prediction = model.predict(img_data)
+        # Convert the image data to a numpy array and normalize it
+        img_data = np.array(char_img) / 255.0
 
-    # The prediction is an array of probabilities for each class
-    # Use np.argmax to get the index of the highest probability
-    predicted_class_index = np.argmax(prediction)
+        # Reshape the data to the shape your model expects
+        # For a single grayscale image, the shape is (1, 32, 32, 1)
+        img_data = img_data.reshape(1, 32, 32, 1)
 
-    # Use the label encoder to get the original class name
-    predicted_class = encoder.inverse_transform([predicted_class_index])
+        # Use the model to make a prediction
+        prediction = model.predict(img_data)
 
-    predicted_char = convert_label_to_text(predicted_class[0])
+        # The prediction is an array of probabilities for each class
+        # Use np.argmax to get the index of the highest probability
+        predicted_class_index = np.argmax(prediction)
 
-    return {"prediction": predicted_char}
+        # Use the label encoder to get the original class name
+        predicted_class = encoder.inverse_transform([predicted_class_index])
+
+        predicted_char = convert_label_to_text(predicted_class[0])
+
+        predictions.append(predicted_char)
+
+        prediction_string = ''.join(predictions)
+
+    return {"predictions": prediction_string}
+
 
 def convert_label_to_text(predicted_label):
     # Look up the actual character in the dictionary
