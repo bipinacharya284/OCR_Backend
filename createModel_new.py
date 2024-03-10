@@ -1,4 +1,4 @@
-# Import necessary libraries
+# necessary library imported
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -12,28 +12,27 @@ from tensorflow.keras import regularizers
 from tensorflow.keras.layers import BatchNormalization, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# Load your dataset
+# Loading dataset 
 data = pd.read_csv('data.csv')
 
-# Assuming your data.csv has 'label' column for target and rest are pixel values
-# Prepare your data
+# Seperating the image pixels with the label 
 labels = data['character']
 pixels = data.drop('character', axis=1)
 
 encoder = LabelEncoder()
 labels = encoder.fit_transform(labels)
 
-# Normalize pixel values to be between 0 and 1
+# Normalizing the pixel value 
 pixels = pixels / 255.0
 
-# Split your data into training and testing sets
+# Spliting data into training and testing sets
 train_pixels, test_pixels, train_labels, test_labels = train_test_split(pixels, labels, test_size=0.2)
 
-# Reshape your data to fit the model
+# Reshaping data to fit the model
 train_pixels = np.array(train_pixels).reshape(-1, 32, 32, 1)
 test_pixels = np.array(test_pixels).reshape(-1, 32, 32, 1)
 
-# Data augmentation
+# Augumenting data
 datagen = ImageDataGenerator(
     rotation_range=10,  # randomly rotate images in the range (degrees, 0 to 180)
     zoom_range = 0.1, # Randomly zoom image 
@@ -44,7 +43,7 @@ datagen = ImageDataGenerator(
 
 datagen.fit(train_pixels)
 
-# Create the convolutional base
+# Creating convolutional base layer
 model = models.Sequential()
 model.add(layers.Conv2D(32, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001), input_shape=(32, 32, 1)))
 model.add(BatchNormalization())
@@ -57,7 +56,7 @@ model.add(BatchNormalization())
 model.add(layers.Conv2D(128, (3, 3), activation='relu', kernel_regularizer=regularizers.l2(0.001)))
 model.add(BatchNormalization())
 
-# Add Dense layers on top
+# Adding Dense layers on top
 model.add(layers.Flatten())
 model.add(layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Dropout(0.5))
@@ -67,7 +66,7 @@ model.add(layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2
 model.add(Dropout(0.5))
 model.add(layers.Dense(len(np.unique(labels)), activation='softmax'))  
 
-# Compile and train the model
+# Compilining and training the model
 model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
@@ -81,10 +80,10 @@ history = model.fit(datagen.flow(train_pixels, train_labels, batch_size=32),
                     validation_data=(test_pixels, test_labels),
                     callbacks=[early_stopping, learning_rate_reduction])
 
-# Save the entire model to a HDF5 file
+# Saving the entire model to HDF5 file
 model.save('ocr_model_new.h5')
 
-# Plot training & validation accuracy values
+# Ploting training & validation accuracy values
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 plt.plot(history.history['accuracy'])
@@ -94,7 +93,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 
-# Plot training & validation loss values
+# Ploting training & validation loss values
 plt.subplot(1, 2, 2)
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
@@ -104,19 +103,19 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.show()
 
-# Predict the values from the validation dataset
+# Predicting the values from the validation dataset
 y_pred = model.predict(test_pixels)
-# Convert predictions classes to one hot vectors 
+# Converting predictions classes to one hot vectors 
 y_pred_classes = np.argmax(y_pred, axis = 1) 
 
 # Convert the labels back to original names 
 test_labels_names = encoder.inverse_transform(test_labels)
 y_pred_classes_names = encoder.inverse_transform(y_pred_classes)
 
-# compute the confusion matrix
+# Computing the confusion matrix
 confusion_mtx = confusion_matrix(test_labels_names, y_pred_classes_names) 
 
-# plot the confusion matrix
+# Ploting the confusion matrix
 f,ax = plt.subplots(figsize=(8, 8))
 sns.heatmap(confusion_mtx, annot=True, linewidths=0.01,cmap="Greens",linecolor="gray", fmt= '.1f',ax=ax)
 plt.xlabel("Predicted Label")
@@ -125,11 +124,11 @@ plt.title("Confusion Matrix")
 plt.savefig('confusion_matrix.png')  # Save the confusion matrix to a file
 plt.show()
 
-# Classification report
+# Preparing Classification report
 print('Classification Report')
 classification_rep = classification_report(test_labels_names, y_pred_classes_names)
 print(classification_rep)
 
-# Save the classification report to a file
+# Saving the classification report to a file
 with open('classification_report.txt', 'w') as f:
     f.write(classification_rep)

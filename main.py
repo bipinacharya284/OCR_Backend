@@ -6,12 +6,13 @@ import numpy as np
 import pickle
 import io
 
+# Importing the word segmentation module
 from wordSegmentation import segment_word_into_characters
 
 
 app = FastAPI()
 
-# Add CORS middleware
+# Adding CORS middleware for Frontend Service able to access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -20,13 +21,14 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-# Load the trained model
+# Loading the trained model
 model = load_model('ocr_model_new.h5')
 
-# Load the label encoder
+# Loading the label encoder
 with open('label_encoder.pkl', 'rb') as f:
     encoder = pickle.load(f)
 
+# Label to unicode character mapping 
 label_to_char = {
     'character_01_ka': 'क',
     'character_02_kha': 'ख',
@@ -76,45 +78,47 @@ label_to_char = {
     'digit_9': '९',
 }
 
+# Post api creation 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    # Read the image file
+    # Reading the image file
     contents = await file.read()
     img = Image.open(io.BytesIO(contents)).convert('L')
 
-    # Save the image to a temporary file
+    # Saving the image to a temporary file
     temp_file_path = 'temp.png'
     img.save(temp_file_path)
 
-    # Segment the word into individual characters
+    # Segmenting the word into individual characters
     characters = segment_word_into_characters(temp_file_path)
 
-    # Process each character
+    # Processing each character
     predictions = []
     for char_img in characters:
-        # Resize the image to 32x32 pixels
+        # Resizing the image to 32x32 pixels
         char_img = char_img.resize((32, 32))
 
-        # Invert the image
+        # Inverting the image
         char_img = ImageOps.invert(char_img)
 
-        # Convert the image data to a numpy array and normalize it
+        # Converting the image data to a numpy array and normalizing it
         img_data = np.array(char_img) / 255.0
 
-        # Reshape the data to the shape your model expects
+        # Reshaping the data to the shape model what supports
         # For a single grayscale image, the shape is (1, 32, 32, 1)
         img_data = img_data.reshape(1, 32, 32, 1)
 
-        # Use the model to make a prediction
+        # Using the model to make a prediction
         prediction = model.predict(img_data)
 
         # The prediction is an array of probabilities for each class
-        # Use np.argmax to get the index of the highest probability
+        # Using np.argmax to get the index of the highest probability
         predicted_class_index = np.argmax(prediction)
 
-        # Use the label encoder to get the original class name
+        # Using the label encoder to get the original class name
         predicted_class = encoder.inverse_transform([predicted_class_index])
 
+        # Using the label to unicode mapping function to map 
         predicted_char = convert_label_to_text(predicted_class[0])
 
         predictions.append(predicted_char)
@@ -125,5 +129,5 @@ async def predict(file: UploadFile = File(...)):
 
 
 def convert_label_to_text(predicted_label):
-    # Look up the actual character in the dictionary
+    # Look up for the actual character in the dictionary
     return label_to_char.get(predicted_label, "Unknown label")
